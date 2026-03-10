@@ -283,7 +283,7 @@ public class TelegramNotifier : ITelegramNotifier
 
         if (!string.IsNullOrEmpty(deal.Permalink))
         {
-            textBuilder.AppendLine($"Открыть на Pepper.ru: https://www.pepper.ru/deals/{deal.Permalink}");
+            textBuilder.AppendLine($"Открыть на pepper: https://www.pepper.ru/deals/{deal.Permalink}");
         }
 
         try
