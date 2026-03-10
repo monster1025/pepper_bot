@@ -10,14 +10,16 @@ using PepperBot.Infrastructure.Health;
 using PepperBot.Infrastructure.Pepper;
 using PepperBot.Infrastructure.Telegram;
 using Telegram.Bot;
+using NLog.Web;
 
-var builder = WebApplication.CreateBuilder(args);
+var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
 
-builder.Services.AddLogging(logging =>
+try
 {
-    logging.ClearProviders();
-    logging.AddConsole();
-});
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Logging.ClearProviders();
+    builder.Host.UseNLog();
 
 builder.Services.AddSingleton<IDealRepository, SqliteDealRepository>();
 builder.Services.AddSingleton<ISubscriptionRepository, SqliteSubscriptionRepository>();
@@ -33,25 +35,36 @@ builder.Services.AddSingleton<ITelegramBotClient>(_ =>
     return new TelegramBotClient(token);
 });
 
-builder.Services.AddHostedService<BotWorker>();
+    builder.Services.AddHostedService<BotWorker>();
 
-var app = builder.Build();
+    var app = builder.Build();
 
-app.MapGet("/health", (IHealthMonitor healthMonitor) =>
-{
-    var successTtl = TimeSpan.FromMinutes(15);
-    var isHealthy = healthMonitor.IsHealthy(successTtl);
-
-    if (isHealthy)
+    app.MapGet("/health", (IHealthMonitor healthMonitor) =>
     {
-        return Results.Ok(new
+        var successTtl = TimeSpan.FromMinutes(15);
+        var isHealthy = healthMonitor.IsHealthy(successTtl);
+
+        if (isHealthy)
         {
-            status = "Healthy",
-            lastSuccessfulRequestAt = healthMonitor.LastSuccessfulRequestAt
-        });
-    }
+            return Results.Ok(new
+            {
+                status = "Healthy",
+                lastSuccessfulRequestAt = healthMonitor.LastSuccessfulRequestAt
+            });
+        }
 
-    return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-});
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    });
 
-await app.RunAsync();
+    logger.LogInformation("Запуск PepperBot приложения");
+    await app.RunAsync();
+}
+catch (Exception ex)
+{
+    logger.LogError(ex, "Приложение остановлено из-за необработанного исключения");
+    throw;
+}
+finally
+{
+    global::NLog.LogManager.Shutdown();
+}

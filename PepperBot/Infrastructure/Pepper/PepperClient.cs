@@ -45,7 +45,10 @@ public class PepperClient : IPepperClient
     public async Task<IReadOnlyList<Deal>> GetLatestDealsAsync(CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, Url);
+        _logger.LogDebug("Отправка запроса за последними скидками Pepper: {Url}", Url);
+
         using var response = await _httpClient.SendAsync(request, cancellationToken);
+        _logger.LogDebug("Получен ответ от Pepper: {StatusCode}", (int)response.StatusCode);
 
         response.EnsureSuccessStatusCode();
 
@@ -58,7 +61,12 @@ public class PepperClient : IPepperClient
             return Array.Empty<Deal>();
         }
 
-        return dto.Deals.Select(MapToDeal).ToArray();
+        _logger.LogInformation("Успешно распарсен ответ Pepper: всего сделок в ответе {DealCount}", dto.Deals.Count);
+
+        var mappedDeals = dto.Deals.Select(MapToDeal).ToArray();
+        _logger.LogDebug("После маппинга в доменную модель осталось сделок: {MappedCount}", mappedDeals.Length);
+
+        return mappedDeals;
     }
 
     private static Deal MapToDeal(PepperDeal dto)
