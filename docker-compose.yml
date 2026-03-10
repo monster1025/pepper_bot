@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.3'
 services:
   pepper-bot:
     build:
@@ -8,8 +8,7 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-      - PEPPER_CLIENT_HEADER=${PEPPER_CLIENT_HEADER}
     volumes:
-      - ./data:/app
+      - ./data:/app/data
     restart: unless-stopped
 

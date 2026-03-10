@@ -15,5 +15,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV DOTNET_EnableDiagnostics=0
-ENTRYPOINT ["dotnet", "PepperBot.dll"]
+RUN pwd;ls -la
+ENTRYPOINT ["dotnet", "/app/PepperBot.dll"]
 
