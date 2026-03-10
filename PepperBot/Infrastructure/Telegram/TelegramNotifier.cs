@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Text;
-using Microsoft.Extensions.Logging;
+using NLog;
 using PepperBot.Application.Interfaces;
 using PepperBot.Domain;
 using Telegram.Bot;
@@ -14,9 +14,10 @@ namespace PepperBot.Infrastructure.Telegram;
 
 public class TelegramNotifier : ITelegramNotifier
 {
+    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly ITelegramBotClient _botClient;
     private readonly ISubscriptionRepository _subscriptionRepository;
-    private readonly ILogger<TelegramNotifier> _logger;
     private readonly string _broadcastChatId;
     private bool _started;
 
@@ -30,17 +31,15 @@ public class TelegramNotifier : ITelegramNotifier
 
     public TelegramNotifier(
         ITelegramBotClient botClient,
-        ISubscriptionRepository subscriptionRepository,
-        ILogger<TelegramNotifier> logger)
+        ISubscriptionRepository subscriptionRepository)
     {
         _botClient = botClient;
         _subscriptionRepository = subscriptionRepository;
-        _logger = logger;
         _broadcastChatId = Environment.GetEnvironmentVariable("TELEGRAM_CHAT_ID") ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(_broadcastChatId))
         {
-            _logger.LogInformation("TELEGRAM_CHAT_ID не задан. Общая рассылка по скидкам будет отключена.");
+            Logger.Info("TELEGRAM_CHAT_ID не задан. Общая рассылка по скидкам будет отключена.");
         }
     }
 
@@ -83,7 +82,7 @@ public class TelegramNotifier : ITelegramNotifier
             cancellationToken);
 
         _started = true;
-        _logger.LogInformation("Запущена обработка входящих сообщений Telegram.");
+        Logger.Info("Запущена обработка входящих сообщений Telegram.");
 
         return Task.CompletedTask;
     }
@@ -198,7 +197,7 @@ public class TelegramNotifier : ITelegramNotifier
                 text: confirmation.ToString(),
                 cancellationToken: cancellationToken);
 
-            _logger.LogInformation(
+            Logger.Info(
                 "Для чата {ChatId} добавлены правила подписки по ключевым словам: {Keywords}",
                 chatId,
                 string.Join(", ", keywords));
@@ -253,7 +252,7 @@ public class TelegramNotifier : ITelegramNotifier
             _ => exception.ToString()
         };
 
-        _logger.LogError("Ошибка Telegram-бота: {Error}", errorMessage);
+        Logger.Error("Ошибка Telegram-бота: {Error}", errorMessage);
         return Task.CompletedTask;
     }
 
@@ -296,7 +295,7 @@ public class TelegramNotifier : ITelegramNotifier
         }
         catch (ApiRequestException ex)
         {
-            _logger.LogWarning(
+            Logger.Warn(
                 ex,
                 "Не удалось отправить сообщение в Telegram (чат {ChatId}): [{Code}] {Message}",
                 chatId,

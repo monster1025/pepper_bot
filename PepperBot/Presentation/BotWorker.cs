@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using NLog;
 using PepperBot.Application.Interfaces;
 using PepperBot.Application.Services;
 
@@ -7,24 +7,23 @@ namespace PepperBot;
 
 public class BotWorker : BackgroundService
 {
+    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly DealService _dealService;
     private readonly IDealRepository _repository;
     private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly ITelegramNotifier _telegramNotifier;
-    private readonly ILogger<BotWorker> _logger;
 
     public BotWorker(
         DealService dealService,
         IDealRepository repository,
         ISubscriptionRepository subscriptionRepository,
-        ITelegramNotifier telegramNotifier,
-        ILogger<BotWorker> logger)
+        ITelegramNotifier telegramNotifier)
     {
         _dealService = dealService;
         _repository = repository;
         _subscriptionRepository = subscriptionRepository;
         _telegramNotifier = telegramNotifier;
-        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,7 +34,7 @@ public class BotWorker : BackgroundService
         // Вся работа с Telegram вынесена в TelegramNotifier
         await _telegramNotifier.StartAsync(stoppingToken);
 
-        _logger.LogInformation("PepperBot запущен. Опрос скидок каждые 30 секунд.");
+        Logger.Info("PepperBot запущен. Опрос скидок каждые 30 секунд.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -45,7 +44,7 @@ public class BotWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при обработке скидок");
+                Logger.Error(ex, "Ошибка при обработке скидок");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);

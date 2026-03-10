@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
+using NLog;
 using PepperBot.Application.Interfaces;
 using PepperBot.Domain;
 
@@ -9,6 +9,8 @@ namespace PepperBot.Infrastructure.Pepper;
 
 public class PepperClient : IPepperClient
 {
+    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
+
     private const string Url =
         "https://auth.pepper.ru/v4/home/new?per_page=10&page=1&type=new&fields=id%2Ctitle%2Ccurrent_price%2Cshipping_and_handling%2Cretail_price%2Cpercent_off%2Ctop_deal%2Cimage_medium%2Ccreated_at%2Ccreated_at_in_millis%2Ccomments_count%2Clife_time_hotness%2Cuser%7Bid%2Clogin%2Cimage_medium%2Ccurrent_title%2Cdisplay_title%2Cdisplay_title_icon%7D%2Cstore%7Bpermalink%2Cname%2Cimage%7D%2Cpermalink%2Cposts_count%2Cvote_value%2Cdeal_types%2Cview_count%2Cforum%7Bforum_type%2Cname%2Cpermalink%7D%2Ctag_color_code%2C+dark_theme_tag_color_code%2Cworkflow_state%2Cdisplay_hotness_icon%2Creferral_state%2Ccoupon_code%2Cdeal_url%2Ccomment_preview%2Cis_nsfw%2Cdescription";
 
@@ -17,7 +19,6 @@ public class PepperClient : IPepperClient
         "6c266d5dc070c811e61f611ddd970a3defb493a23c50ee01f32eb9b0cfe46cd8";
 
     private readonly HttpClient _httpClient;
-    private readonly ILogger<PepperClient> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -25,9 +26,8 @@ public class PepperClient : IPepperClient
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public PepperClient(ILogger<PepperClient> logger)
+    public PepperClient()
     {
-        _logger = logger;
         _httpClient = new HttpClient
         {
             BaseAddress = new Uri("https://auth.pepper.ru")
@@ -45,10 +45,10 @@ public class PepperClient : IPepperClient
     public async Task<IReadOnlyList<Deal>> GetLatestDealsAsync(CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, Url);
-        _logger.LogDebug("Отправка запроса за последними скидками Pepper: {Url}", Url);
+        Logger.Debug("Отправка запроса за последними скидками Pepper: {Url}", Url);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
-        _logger.LogDebug("Получен ответ от Pepper: {StatusCode}", (int)response.StatusCode);
+        Logger.Debug("Получен ответ от Pepper: {StatusCode}", (int)response.StatusCode);
 
         response.EnsureSuccessStatusCode();
 
@@ -57,14 +57,14 @@ public class PepperClient : IPepperClient
 
         if (dto?.Deals is null)
         {
-            _logger.LogWarning("Не удалось распарсить ответ Pepper");
+            Logger.Warn("Не удалось распарсить ответ Pepper");
             return Array.Empty<Deal>();
         }
 
-        _logger.LogInformation("Успешно распарсен ответ Pepper: всего сделок в ответе {DealCount}", dto.Deals.Count);
+        Logger.Info("Успешно распарсен ответ Pepper: всего сделок в ответе {DealCount}", dto.Deals.Count);
 
         var mappedDeals = dto.Deals.Select(MapToDeal).ToArray();
-        _logger.LogDebug("После маппинга в доменную модель осталось сделок: {MappedCount}", mappedDeals.Length);
+        Logger.Debug("После маппинга в доменную модель осталось сделок: {MappedCount}", mappedDeals.Length);
 
         return mappedDeals;
     }

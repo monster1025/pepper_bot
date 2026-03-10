@@ -10,6 +10,7 @@ using PepperBot.Infrastructure.Health;
 using PepperBot.Infrastructure.Pepper;
 using PepperBot.Infrastructure.Telegram;
 using Telegram.Bot;
+using NLog;
 using NLog.Web;
 
 var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
@@ -21,19 +22,19 @@ try
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
 
-builder.Services.AddSingleton<IDealRepository, SqliteDealRepository>();
-builder.Services.AddSingleton<ISubscriptionRepository, SqliteSubscriptionRepository>();
-builder.Services.AddSingleton<IPepperClient, PepperClient>();
-builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
-builder.Services.AddSingleton<IHealthMonitor, PepperHealthMonitor>();
-builder.Services.AddSingleton<DealService>();
+    builder.Services.AddSingleton<IDealRepository, SqliteDealRepository>();
+    builder.Services.AddSingleton<ISubscriptionRepository, SqliteSubscriptionRepository>();
+    builder.Services.AddSingleton<IPepperClient, PepperClient>();
+    builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
+    builder.Services.AddSingleton<IHealthMonitor, PepperHealthMonitor>();
+    builder.Services.AddSingleton<DealService>();
 
-// Клиент Telegram-бота для приёма личных сообщений
-builder.Services.AddSingleton<ITelegramBotClient>(_ =>
-{
-    var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") ?? string.Empty;
-    return new TelegramBotClient(token);
-});
+    // Клиент Telegram-бота для приёма личных сообщений
+    builder.Services.AddSingleton<ITelegramBotClient>(_ =>
+    {
+        var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") ?? string.Empty;
+        return new TelegramBotClient(token);
+    });
 
     builder.Services.AddHostedService<BotWorker>();
 
@@ -56,12 +57,12 @@ builder.Services.AddSingleton<ITelegramBotClient>(_ =>
         return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
     });
 
-    logger.LogInformation("Запуск PepperBot приложения");
+    logger.Info("Запуск PepperBot приложения");
     await app.RunAsync();
 }
 catch (Exception ex)
 {
-    logger.LogError(ex, "Приложение остановлено из-за необработанного исключения");
+    logger.Error(ex, "Приложение остановлено из-за необработанного исключения");
     throw;
 }
 finally
