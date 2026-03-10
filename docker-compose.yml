@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  pepper-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pepper-bot
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - PEPPER_CLIENT_HEADER=${PEPPER_CLIENT_HEADER}
+    volumes:
+      - ./data:/app
+    restart: unless-stopped
+
