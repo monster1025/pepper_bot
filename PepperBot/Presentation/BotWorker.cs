@@ -9,23 +9,33 @@ public class BotWorker : BackgroundService
 {
     private readonly DealService _dealService;
     private readonly IDealRepository _repository;
+    private readonly ISubscriptionRepository _subscriptionRepository;
+    private readonly ITelegramNotifier _telegramNotifier;
     private readonly ILogger<BotWorker> _logger;
 
     public BotWorker(
         DealService dealService,
         IDealRepository repository,
+        ISubscriptionRepository subscriptionRepository,
+        ITelegramNotifier telegramNotifier,
         ILogger<BotWorker> logger)
     {
         _dealService = dealService;
         _repository = repository;
+        _subscriptionRepository = subscriptionRepository;
+        _telegramNotifier = telegramNotifier;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await _repository.InitializeAsync(stoppingToken);
+        await _subscriptionRepository.InitializeAsync(stoppingToken);
 
-        _logger.LogInformation("PepperBot запущен. Опрос каждые 30 секунд.");
+        // Вся работа с Telegram вынесена в TelegramNotifier
+        await _telegramNotifier.StartAsync(stoppingToken);
+
+        _logger.LogInformation("PepperBot запущен. Опрос скидок каждые 30 секунд.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -42,4 +52,3 @@ public class BotWorker : BackgroundService
         }
     }
 }
-

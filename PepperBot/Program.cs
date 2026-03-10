@@ -9,6 +9,7 @@ using PepperBot.Infrastructure.Data;
 using PepperBot.Infrastructure.Health;
 using PepperBot.Infrastructure.Pepper;
 using PepperBot.Infrastructure.Telegram;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,10 +20,18 @@ builder.Services.AddLogging(logging =>
 });
 
 builder.Services.AddSingleton<IDealRepository, SqliteDealRepository>();
+builder.Services.AddSingleton<ISubscriptionRepository, SqliteSubscriptionRepository>();
 builder.Services.AddSingleton<IPepperClient, PepperClient>();
 builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
 builder.Services.AddSingleton<IHealthMonitor, PepperHealthMonitor>();
 builder.Services.AddSingleton<DealService>();
+
+// Клиент Telegram-бота для приёма личных сообщений
+builder.Services.AddSingleton<ITelegramBotClient>(_ =>
+{
+    var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") ?? string.Empty;
+    return new TelegramBotClient(token);
+});
 
 builder.Services.AddHostedService<BotWorker>();
 
