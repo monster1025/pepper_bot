@@ -280,7 +280,8 @@ public class TelegramNotifier : ITelegramNotifier
         textBuilder.AppendLine();
         textBuilder.AppendLine($"Магазин: {deal.StoreName}");
         textBuilder.AppendLine();
-        textBuilder.AppendLine($"Открыть на Pepper.ru: {deal.DealUrl}");
+        textBuilder.AppendLine($"Товар в магазине: {deal.DealUrl}");
+        textBuilder.AppendLine($"Открыть на Pepper.ru: https://www.pepper.ru/deals/{deal.StorePermalink}");
 
         try
         {
