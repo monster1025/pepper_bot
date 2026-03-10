@@ -73,6 +73,7 @@ public class PepperClient : IPepperClient
             CreatedAt = dto.CreatedAt ?? DateTimeOffset.FromUnixTimeMilliseconds(dto.CreatedAtInMillis).UtcDateTime,
             CreatedAtInMillis = dto.CreatedAtInMillis,
             DealUrl = dto.DealUrl ?? string.Empty,
+            Permalink = dto.Permalink ?? string.Empty,
             StoreName = dto.Store?.Name ?? string.Empty,
             StorePermalink = dto.Store?.Permalink ?? string.Empty
         };
@@ -109,6 +110,9 @@ public class PepperClient : IPepperClient
 
         [JsonPropertyName("deal_url")]
         public string? DealUrl { get; set; }
+
+        [JsonPropertyName("permalink")]
+        public string? Permalink { get; set; }
 
         [JsonPropertyName("store")]
         public PepperStore? Store { get; set; }

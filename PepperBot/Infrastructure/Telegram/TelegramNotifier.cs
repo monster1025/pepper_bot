@@ -281,7 +281,11 @@ public class TelegramNotifier : ITelegramNotifier
         textBuilder.AppendLine($"Магазин: {deal.StoreName}");
         textBuilder.AppendLine();
         textBuilder.AppendLine($"Товар в магазине: {deal.DealUrl}");
-        textBuilder.AppendLine($"Открыть на Pepper.ru: https://www.pepper.ru/deals/{deal.StorePermalink}");
+
+        if (!string.IsNullOrEmpty(deal.Permalink))
+        {
+            textBuilder.AppendLine($"Открыть на Pepper.ru: https://www.pepper.ru/deals/{deal.Permalink}");
+        }
 
         try
         {
