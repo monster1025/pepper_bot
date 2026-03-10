@@ -7,15 +7,21 @@ namespace PepperBot.Infrastructure.Data;
 public class SqliteDealRepository : IDealRepository
 {
     private const string DatabaseFileName = "pepper_bot.db";
+    private const string DataDirectory = "data";
 
     private string ConnectionString =>
         new SqliteConnectionStringBuilder
         {
-            DataSource = DatabaseFileName
+            DataSource = Path.Combine(DataDirectory, DatabaseFileName)
         }.ToString();
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
+        if (Directory.Exists(DataDirectory))
+        {
+            Directory.CreateDirectory(DataDirectory);
+        }
+
         await using var connection = new SqliteConnection(ConnectionString);
         await connection.OpenAsync(cancellationToken);
 
