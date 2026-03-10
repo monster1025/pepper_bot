@@ -10,22 +10,31 @@ public class DealService
     private readonly IDealRepository _repository;
     private readonly ITelegramNotifier _notifier;
     private readonly ILogger<DealService> _logger;
+    private readonly IHealthMonitor _healthMonitor;
 
     public DealService(
         IPepperClient pepperClient,
         IDealRepository repository,
         ITelegramNotifier notifier,
-        ILogger<DealService> logger)
+        ILogger<DealService> logger,
+        IHealthMonitor healthMonitor)
     {
         _pepperClient = pepperClient;
         _repository = repository;
         _notifier = notifier;
         _logger = logger;
+        _healthMonitor = healthMonitor;
     }
 
     public async Task CheckAndNotifyAsync(CancellationToken cancellationToken)
     {
         var deals = await _pepperClient.GetLatestDealsAsync(cancellationToken);
+
+        // Хелсчек: успешный запрос, вернувший более одной скидки (пусть и не новой)
+        if (deals.Count > 1)
+        {
+            _healthMonitor.ReportSuccess(DateTimeOffset.UtcNow);
+        }
 
         foreach (var deal in deals)
         {
