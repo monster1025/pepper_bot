@@ -288,9 +288,22 @@ public class TelegramNotifier : ITelegramNotifier
 
         try
         {
+            var text = textBuilder.ToString();
+
+            if (!string.IsNullOrWhiteSpace(deal.ImageMedium)
+                && Uri.TryCreate(deal.ImageMedium, UriKind.Absolute, out var imageUri))
+            {
+                await _botClient.SendPhoto(
+                    chatId: chatId,
+                    photo: InputFile.FromUri(imageUri),
+                    caption: text,
+                    cancellationToken: cancellationToken);
+                return;
+            }
+
             await _botClient.SendMessage(
                 chatId: chatId,
-                text: textBuilder.ToString(),
+                text: text,
                 cancellationToken: cancellationToken);
         }
         catch (ApiRequestException ex)
@@ -301,6 +314,25 @@ public class TelegramNotifier : ITelegramNotifier
                 chatId,
                 ex.ErrorCode,
                 ex.Message);
+
+            // Фолбэк: если фото не отправилось (например, Telegram не смог скачать URL),
+            // пробуем хотя бы текст.
+            try
+            {
+                await _botClient.SendMessage(
+                    chatId: chatId,
+                    text: textBuilder.ToString(),
+                    cancellationToken: cancellationToken);
+            }
+            catch (ApiRequestException fallbackEx)
+            {
+                Logger.Warn(
+                    fallbackEx,
+                    "Не удалось отправить фолбэк-текст в Telegram (чат {ChatId}): [{Code}] {Message}",
+                    chatId,
+                    fallbackEx.ErrorCode,
+                    fallbackEx.Message);
+            }
         }
     }
 

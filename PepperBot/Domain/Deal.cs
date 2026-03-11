@@ -10,6 +10,7 @@ public class Deal
     public DateTime CreatedAt { get; set; }
     public long CreatedAtInMillis { get; set; }
     public string DealUrl { get; set; } = string.Empty;
+    public string ImageMedium { get; set; } = string.Empty;
     public string Permalink { get; set; } = string.Empty;
     public string StoreName { get; set; } = string.Empty;
     public string StorePermalink { get; set; } = string.Empty;
