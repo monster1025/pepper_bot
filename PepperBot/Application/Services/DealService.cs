@@ -85,7 +85,7 @@ public class DealService
                     continue;
                 }
 
-                var isMatch = IsMatch(searchableText, keywords);
+                var isMatch = IsMatch(searchableText, keywords, out var matchedKeyword);
                 Logger.Debug(
                     "Результат фильтрации скидки {DealId} по подписке {SubscriptionId}: {IsMatch}. Текст: \"{Text}\"; ключевые слова: {Keywords}",
                     deal.Id,
@@ -96,7 +96,9 @@ public class DealService
 
                 if (isMatch)
                 {
-                    await _notifier.NotifyDealToChatAsync(deal, subscription.ChatId, cancellationToken);
+                    var selectionRule =
+                        $"совпадение по ключевому слову \"{matchedKeyword}\" (подписка [{subscription.Id}]: {subscription.Keywords})";
+                    await _notifier.NotifyDealToChatAsync(deal, subscription.ChatId, selectionRule, cancellationToken);
                 }
             }
         }
@@ -111,8 +113,9 @@ public class DealService
             .ToList();
     }
 
-    private static bool IsMatch(string text, List<string> keywords)
+    private static bool IsMatch(string text, List<string> keywords, out string matchedKeyword)
     {
+        matchedKeyword = string.Empty;
         if (keywords.Count == 0)
         {
             return false;
@@ -122,6 +125,7 @@ public class DealService
         {
             if (text.Contains(keyword, StringComparison.OrdinalIgnoreCase))
             {
+                matchedKeyword = keyword;
                 return true;
             }
         }

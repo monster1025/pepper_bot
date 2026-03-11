@@ -50,17 +50,17 @@ public class TelegramNotifier : ITelegramNotifier
             return Task.CompletedTask;
         }
 
-        return SendDealAsync(deal, _broadcastChatId, cancellationToken);
+        return SendDealAsync(deal, _broadcastChatId, selectionRule: null, cancellationToken);
     }
 
-    public Task NotifyDealToChatAsync(Deal deal, string chatId, CancellationToken cancellationToken)
+    public Task NotifyDealToChatAsync(Deal deal, string chatId, string? selectionRule, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(chatId))
         {
             return Task.CompletedTask;
         }
 
-        return SendDealAsync(deal, chatId, cancellationToken);
+        return SendDealAsync(deal, chatId, selectionRule, cancellationToken);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -92,9 +92,7 @@ public class TelegramNotifier : ITelegramNotifier
         if (update.Type == UpdateType.CallbackQuery)
         {
             await HandleCallbackQueryAsync(botClient, update.CallbackQuery!, cancellationToken);
-        {
             return;
-        }
         }
 
         if (update.Type != UpdateType.Message)
@@ -256,10 +254,16 @@ public class TelegramNotifier : ITelegramNotifier
         return Task.CompletedTask;
     }
 
-    private async Task SendDealAsync(Deal deal, string chatId, CancellationToken cancellationToken)
+    private async Task SendDealAsync(Deal deal, string chatId, string? selectionRule, CancellationToken cancellationToken)
     {
         var textBuilder = new StringBuilder();
         textBuilder.AppendLine($"🔥 {deal.Title}");
+
+        if (!string.IsNullOrWhiteSpace(selectionRule))
+        {
+            textBuilder.AppendLine($"Правило отбора: {selectionRule}");
+            textBuilder.AppendLine();
+        }
 
         if (deal.CurrentPrice is not null)
         {

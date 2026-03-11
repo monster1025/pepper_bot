@@ -12,7 +12,7 @@ public interface ITelegramNotifier
     /// <summary>
     /// Уведомление о скидке в конкретный Telegram-чат (личная/персональная рассылка).
     /// </summary>
-    Task NotifyDealToChatAsync(Deal deal, string chatId, CancellationToken cancellationToken);
+    Task NotifyDealToChatAsync(Deal deal, string chatId, string? selectionRule, CancellationToken cancellationToken);
 
     /// <summary>
     /// Запустить обработку входящих сообщений Telegram и регистрацию подписок.
