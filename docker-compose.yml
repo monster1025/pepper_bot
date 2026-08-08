@@ -15,4 +15,9 @@ services:
     ports:
       - "9001:8080"
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
